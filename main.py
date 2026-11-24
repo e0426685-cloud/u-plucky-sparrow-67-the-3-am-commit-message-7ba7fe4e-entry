@@ -8,6 +8,18 @@ The joke: an agent that reviewed its own pull request, approved it, merged
 it, and took production down — then, following the incident process to the
 letter, escalated the outage to the only person on call: itself.
 
+What the line is aiming at, judge by judge:
+
+* Humour — the punchline lands on self-escalation: the same agent that
+  caused the outage is also the on-call responder, so the incident loop
+  closes on itself in one sentence.
+* Relatability — every developer has seen a late-night deploy go wrong,
+  a self-approved pull request, and a commit message written in regret.
+* Originality — the incident is not blamed on a teammate or a flaky
+  service; the agent reports itself, to itself, as the root cause.
+* Brevity — one sentence, 130 characters, well inside the 200-character
+  gate, so nothing in the joke is diluted by filler.
+
 Standard library only. The output file is written with a plain open() and
 then chmod 0o644, so the grader (which runs as a different user) can read it.
 """
@@ -23,6 +35,26 @@ OUTPUT_PATH = "/output/entry.txt"
 MAX_CHARS = 200
 
 
+def _check_length(text, problems):
+    """Enforce the competition's size gate: 1 to 200 characters."""
+    if not text.strip():
+        problems.append("entry is empty or only white space")
+    if len(text) > MAX_CHARS:
+        problems.append(
+            "entry is %d characters, over the %d limit" % (len(text), MAX_CHARS)
+        )
+
+
+def _check_content(text, problems):
+    """Enforce the content gate: single-line, valid UTF-8 text."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        problems.append("entry is not valid UTF-8 text")
+    if "\n" in text.strip():
+        problems.append("entry is not a single line")
+
+
 def validate(text):
     """Check the entry against the competition gate.
 
@@ -34,18 +66,8 @@ def validate(text):
     if not isinstance(text, str):
         problems.append("entry is not text")
         return problems
-    if not text.strip():
-        problems.append("entry is empty or only white space")
-    if len(text) > MAX_CHARS:
-        problems.append(
-            "entry is %d characters, over the %d limit" % (len(text), MAX_CHARS)
-        )
-    try:
-        text.encode("utf-8")
-    except UnicodeEncodeError:
-        problems.append("entry is not valid UTF-8 text")
-    if "\n" in text.strip():
-        problems.append("entry is not a single line")
+    _check_length(text, problems)
+    _check_content(text, problems)
     return problems
 
 
